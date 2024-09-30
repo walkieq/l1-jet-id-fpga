@@ -328,7 +328,9 @@ namespace nnet {
 
     // dnn1 with 2 layers
     template <class data_t, class res_t, typename CONFIG_T>
-    void dnn1_2l_mlst01(  data_t input[], res_t res[], // dnn1 with 2 FC layers 
+    void dnn1_2l_mlst01(  
+                data_t input[], 
+                res_t res[], // dnn1 with 2 FC layers 
                 typename CONFIG_T::mlp_params_t w1[], 
                 typename CONFIG_T::mlp_params_t w2[],
                 typename CONFIG_T::mlp_params_t b1[], 
@@ -341,9 +343,9 @@ namespace nnet {
 		//std::cout << "DNN1: PRINTING OUTPUT OF FC1 FIRST NODE \n";
 		//std::cout << layer2_out[0] << std::endl;
 		
-        data_t layer3_out[CONFIG_T::fc1_out];
+        typename CONFIG_T::relu_res_t layer3_out[CONFIG_T::fc1_out];
         #pragma HLS ARRAY_PARTITION variable=layer3_out complete dim=0
-        nnet::relu<data_t, data_t, typename CONFIG_T::relu1_config>(layer2_out, layer3_out); // fc1_relu
+        nnet::relu<data_t, typename CONFIG_T::relu_res_t, typename CONFIG_T::relu1_config>(layer2_out, layer3_out); // fc1_relu
 
         //data_t layer4_out[CONFIG_T::fc2_out];
         //#pragma HLS ARRAY_PARTITION variable=layer4_out complete dim=0
@@ -355,9 +357,9 @@ namespace nnet {
 
         data_t layer6_out[CONFIG_T::fc3_out];
         #pragma HLS ARRAY_PARTITION variable=layer6_out complete dim=0
-        nnet::dense<data_t, data_t, typename CONFIG_T::output1_config>(layer3_out, layer6_out, w2, b2); // output
+        nnet::dense<typename CONFIG_T::relu_res_t, data_t, typename CONFIG_T::output1_config>(layer3_out, layer6_out, w2, b2); // output
 
-        nnet::relu<data_t, data_t, typename CONFIG_T::softmax1_config>(layer6_out, res);
+        nnet::relu<data_t, typename CONFIG_T::relu_res_t, typename CONFIG_T::softmax1_config>(layer6_out, res);
         //nnet::softmax<data_t, data_t, typename CONFIG_T::softmax1_config>(layer6_out, res); // output_softmax
     }
     // dnn1 with 2 layers
@@ -394,7 +396,9 @@ namespace nnet {
     }
 
     template <class data_t, class res_T, typename CONFIG_T>
-    void dnn2_mlst01(data_t input[], res_T res[], 
+    void dnn2_mlst01(
+        data_t input[], 
+        res_T res[], 
         typename CONFIG_T::mlp_params_t w1[], 
         typename CONFIG_T::mlp_params_t w2[], 
         typename CONFIG_T::mlp_params_t w3[], 
@@ -406,23 +410,23 @@ namespace nnet {
         #pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
         nnet::dense<data_t, data_t, typename CONFIG_T::fc4_config>(input, layer2_out, w1, b1); // fc1
 
-        data_t layer3_out[CONFIG_T::fc1_out];
+        typename CONFIG_T::relu_res_t layer3_out[CONFIG_T::fc1_out];
         #pragma HLS ARRAY_PARTITION variable=layer3_out complete dim=0
-        nnet::relu<data_t, data_t, typename CONFIG_T::relu3_config>(layer2_out, layer3_out); // fc1_relu
+        nnet::relu<data_t, typename CONFIG_T::relu_res_t, typename CONFIG_T::relu3_config>(layer2_out, layer3_out); // fc1_relu
 
         data_t layer4_out[CONFIG_T::fc2_out];
         #pragma HLS ARRAY_PARTITION variable=layer4_out complete dim=0
-        nnet::dense<data_t, data_t, typename CONFIG_T::fc5_config>(layer3_out, layer4_out, w2, b2); // fc2
+        nnet::dense<typename CONFIG_T::relu_res_t, data_t, typename CONFIG_T::fc5_config>(layer3_out, layer4_out, w2, b2); // fc2
 
-        data_t layer5_out[CONFIG_T::fc2_out];
+        typename CONFIG_T::relu_res_t layer5_out[CONFIG_T::fc2_out];
         #pragma HLS ARRAY_PARTITION variable=layer5_out complete dim=0
-        nnet::relu<data_t, data_t, typename CONFIG_T::relu4_config>(layer4_out, layer5_out); // fc2_relu
+        nnet::relu<data_t, typename CONFIG_T::relu_res_t, typename CONFIG_T::relu4_config>(layer4_out, layer5_out); // fc2_relu
 
         data_t layer6_out[CONFIG_T::fc3_out];
         #pragma HLS ARRAY_PARTITION variable=layer6_out complete dim=0
-        nnet::dense<data_t, data_t, typename CONFIG_T::output2_config>(layer5_out, layer6_out, w3, b3); // output
+        nnet::dense<typename CONFIG_T::relu_res_t, data_t, typename CONFIG_T::output2_config>(layer5_out, layer6_out, w3, b3); // output
 
-        nnet::relu<data_t, data_t, typename CONFIG_T::softmax2_config>(layer6_out, res); // output_softmax
+        nnet::relu<data_t, typename CONFIG_T::relu_res_t, typename CONFIG_T::softmax2_config>(layer6_out, res); // output_softmax
         //nnet::softmax<data_t, data_t, typename CONFIG_T::softmax2_config>(layer6_out, res); // output_softmax
     }
 
@@ -452,6 +456,44 @@ namespace nnet {
 
         nnet::relu<data_t, data_t, typename CONFIG_T::softmax2_config>(layer6_out, res); // output_softmax
         //nnet::softmax<data_t, data_t, typename CONFIG_T::softmax2_config>(layer6_out, res); // output_softmax
+    }
+
+    template <class data_t, class res_T, typename CONFIG_T>
+    void dnn3_mlst02(
+            data_t input[], 
+            res_T res[], 
+            typename CONFIG_T::mlp_params_t w1[], 
+            typename CONFIG_T::mlp_params_t w3[], 
+            typename CONFIG_T::mlp_params_t b1[],
+            typename CONFIG_T::mlp_params_t b3[]) {
+
+        //  ============= Dense MLP layers 1: for transforming B into E ==================
+
+        //#pragma HLS PIPELINE
+        #pragma HLS INLINE
+
+        data_t layer2_out[CONFIG_T::fc1_out];
+        #pragma HLS ARRAY_PARTITION variable=layer2_out complete dim=0
+        nnet::dense<data_t, data_t, typename CONFIG_T::fc7_config>(input, layer2_out, w1, b1); // fc1
+
+        typename CONFIG_T::relu_res_t layer3_out[CONFIG_T::fc1_out];
+        #pragma HLS ARRAY_PARTITION variable=layer3_out complete dim=0
+        nnet::relu<data_t, typename CONFIG_T::relu_res_t, typename CONFIG_T::relu5_config>(layer2_out, layer3_out); // fc1_relu
+
+        //data_t layer4_out[CONFIG_T::fc2_out];
+        //#pragma HLS ARRAY_PARTITION variable=layer4_out complete dim=0
+        //nnet::dense<data_t, data_t, typename CONFIG_T::fc8_config>(layer3_out, layer4_out, w2, b2); // fc2
+
+        //data_t layer5_out[CONFIG_T::fc2_out];
+        //#pragma HLS ARRAY_PARTITION variable=layer5_out complete dim=0
+        //nnet::selu<data_t, data_t, typename CONFIG_T::relu6_config>(layer4_out, layer5_out); // fc2_relu
+
+        data_t layer6_out[CONFIG_T::fc3_out];
+        #pragma HLS ARRAY_PARTITION variable=layer6_out complete dim=0
+        nnet::dense<typename CONFIG_T::relu_res_t, data_t, typename CONFIG_T::output3_config>(layer3_out, layer6_out, w3, b3); // output
+
+        //nnet::selu<data_t, data_t, typename CONFIG_T::softmax3_config>(layer6_out, res);
+        nnet::softmax<data_t, res_T, typename CONFIG_T::softmax3_config>(layer6_out, res); // output_softmax
     }
 
     template <class data_t, class res_T, typename CONFIG_T>
@@ -736,6 +778,36 @@ namespace nnet {
 
     }
 
+    template<class data_T, class res_T, typename CONFIG_T>
+    void dnn3_pi(
+            //data_T O[CONFIG_T::D_o_p][CONFIG_T::N_o_p],
+            data_T O[CONFIG_T::N_o_p][CONFIG_T::D_o_p],
+            res_T  O_sum[CONFIG_T::D_o_p] 
+            ) {
+        // initialise O_sum with 0s
+        //data_T O_sum[CONFIG_T::D_o_p];
+        
+        #pragma HLS PIPELINE
+        //#pragma HLS ARRAY_PARTITION variable=O_sum complete
+        // sum every element in each col of O
+        // CHANGE THIS, SUM HORIZONTALLY NOT VERTICALLY.
+        for(int i = 0; i < CONFIG_T::N_o_p; i++) {
+            for(int j = 0; j < CONFIG_T::D_o_p; j++){
+                data_T tmp = (i==0)? (data_T) 0 : O_sum[j];
+			    //#pragma HLS PIPELINE
+			    O_sum[j] = tmp + O[i][j];
+                //O_sum[rows] += O[rows][cols];
+			}
+        }
+
+        for(int k = 0; k < CONFIG_T::D_o_p; k++){
+		    //#pragma HLS PIPELINE
+		    O_sum[k] = O_sum[k] >> 3;
+		}
+
+
+
+    }
 
     template<class data_T, class res_T, typename CONFIG_T>
     void jedi_dnn3_mlst01(
@@ -753,6 +825,7 @@ namespace nnet {
         
         #pragma HLS ARRAY_PARTITION variable=O_sum complete
         #pragma HLS PIPELINE
+        //#pragma HLS INLINE
         
         //for(int i = 0; i < CONFIG_T::D_o_p; i++) {
 		//	#pragma HLS UNROLL
@@ -761,18 +834,20 @@ namespace nnet {
 
         // sum every element in each col of O
         // CHANGE THIS, SUM HORIZONTALLY NOT VERTICALLY.
-        for(int i = 0; i < CONFIG_T::N_o_p; i++) {
-            for(int j = 0; j < CONFIG_T::D_o_p; j++){
-                data_T tmp = (i==0)? (data_T) 0 : O_sum[j];
-			    //#pragma HLS PIPELINE
-			    O_sum[j] = tmp + O[i][j];
-                //O_sum[rows] += O[rows][cols];
-			}
-        }
+        //for(int i = 0; i < CONFIG_T::N_o_p; i++) {
+        //    for(int j = 0; j < CONFIG_T::D_o_p; j++){
+        //        data_T tmp = (i==0)? (data_T) 0 : O_sum[j];
+		//	    //#pragma HLS PIPELINE
+		//	    O_sum[j] = tmp + O[i][j];
+        //        //O_sum[rows] += O[rows][cols];
+		//	}
+        //}
+        nnet::dnn3_pi<data_T, data_T, CONFIG_T>(O, O_sum);
 
         // run sigma_c final neural network on O -> output
         // shape D_o -> N, sum all rows of each column to achieve dimension D_o.
-        nnet::dnn3_mlst01<data_T, data_T, CONFIG_T>(O_sum, res, w1, w3, b1, b3);
+        //nnet::dnn3_mlst01<data_T, data_T, CONFIG_T>(O_sum, res, w1, w3, b1, b3);
+        nnet::dnn3_mlst02<data_T, res_T, CONFIG_T>(O_sum, res, w1, w3, b1, b3);
 	}
 
 
@@ -1465,7 +1540,8 @@ namespace nnet {
 
         data_T cache_column[2 * CONFIG_T::P_p];
         #pragma HLS ARRAY_PARTITION variable=cache_column complete
-        data_T E_col[CONFIG_T_DNN1::D_e_p];
+
+        typename CONFIG_T_DNN1::relu_res_t E_col[CONFIG_T_DNN1::D_e_p];
 		#pragma HLS ARRAY_PARTITION variable=E_col complete
 
 
@@ -1473,16 +1549,19 @@ namespace nnet {
         #pragma HLS ARRAY_PARTITION variable=acc complete
 
         data_T cache2[CONFIG_T::P_p + CONFIG_T::D_e_p];
-        data_T O_col[CONFIG_T_DNN2::D_o_p];
+        typename CONFIG_T_DNN1::relu_res_t O_col[CONFIG_T_DNN2::D_o_p];
         #pragma HLS ARRAY_PARTITION variable=cache2 complete
 		#pragma HLS ARRAY_PARTITION variable=O_col complete
 
+        const int unroll_factor=CONFIG_T::N_o_p / 2;
 
         int index;
 
         JEDI_FUSION:
         for (int i = 0; i < CONFIG_T::N_o_p; i++) {
-		    #pragma HLS PIPELINE REWIND 
+		    //#pragma HLS PIPELINE REWIND 
+		    #pragma HLS PIPELINE REWIND
+            #pragma HLS UNROLL factor=unroll_factor
 
             for (int k = 0; k < (CONFIG_T::N_o_p - 1); k++) {
 
@@ -1504,10 +1583,10 @@ namespace nnet {
 		        //std::cout << std::endl;
 
                 //dnn1_opt_acc<data_T, data_T, CONFIG_T_DNN1>(cache_column, E_col, w1, w2, b1, b2);
-                nnet::dnn1_2l_mlst01<data_T, data_T, CONFIG_T_DNN1>(cache_column, E_col, w1, w2, b1, b2);
+                nnet::dnn1_2l_mlst01<data_T, typename CONFIG_T_DNN1::relu_res_t, CONFIG_T_DNN1>(cache_column, E_col, w1, w2, b1, b2);
                 for(int rows = 0; rows < CONFIG_T_DNN1::D_e_p; rows++) {
 			    	#pragma HLS UNROLL
-                    E[k][rows] = E_col[rows];
+                    E[k][rows] = (data_T) E_col[rows];
 			    }
             } // k
 
@@ -1533,10 +1612,10 @@ namespace nnet {
 				#pragma HLS UNROLL
                 cache2[j+CONFIG_T::P_p] = (res_T) acc[j]; 
             }
-            nnet::dnn2_mlst01<data_T, data_T, CONFIG_T_DNN2>(cache2, O_col, w4, w5, w6, b4, b5, b6);
+            nnet::dnn2_mlst01<data_T, typename CONFIG_T_DNN2::relu_res_t, CONFIG_T_DNN2>(cache2, O_col, w4, w5, w6, b4, b5, b6);
             for(int rows = 0; rows < CONFIG_T_DNN2::D_o_p; rows++) {
 				#pragma HLS UNROLL
-                O[i][rows] = O_col[rows];
+                O[i][rows] = (res_T) O_col[rows];
 			}
         } // i
     } // function end

@@ -394,17 +394,16 @@ struct selu3_config_struct : nnet::activ_config {
     typedef model_default_t table_t;
 };
 
-/*
 struct softmax3_config_struct : nnet::activ_config {
     static const unsigned n_in = N_OUTPUT_3;
     static const unsigned table_size = 1024;
     static const unsigned io_type = nnet::io_parallel;
     static const unsigned reuse_factor = 1;
-    static const nnet::softmax_implementation implementation = nnet::softmax_implementation::latency;
+    static const unsigned axis = -1;
+    static const nnet::softmax_implementation implementation = nnet::softmax_implementation::stable;
     typedef ap_fixed<18,8> exp_table_t;
     typedef ap_fixed<18,8> inv_table_t;
-};*/
-
+};
 
 struct dense1_config {
     // add in all the layers of dnn1 here
@@ -416,6 +415,7 @@ struct dense1_config {
     //static const unsigned fc2_out = N_LAYER_4;
     static const unsigned fc3_out = N_OUTPUT_1;
     static const unsigned DPP_p = DPP;
+    typedef model_relu_res_t relu_res_t;
     typedef model_params_t mlp_params_t;
     typedef model_default_t data_type;
     typedef fc1_config_struct fc1_config;
@@ -436,6 +436,7 @@ struct dense2_config {
     static const unsigned fc1_out = N_LAYER_6;
     static const unsigned fc2_out = N_LAYER_8;
     static const unsigned fc3_out = N_OUTPUT_2;
+    typedef model_relu_res_t relu_res_t;
     typedef model_params_t mlp_params_t;
     typedef fc4_config_struct fc4_config;
     typedef relu3_config_struct relu3_config;
@@ -453,13 +454,15 @@ struct dense3_config {
     static const unsigned fc1_out = N_LAYER_10;
     //static const unsigned fc2_out = N_LAYER_12;
     static const unsigned fc3_out = N_OUTPUT_3;
+    typedef model_relu_res_t relu_res_t;
     typedef model_params_t mlp_params_t;
     typedef fc7_config_struct fc7_config;
     typedef relu5_config_struct relu5_config;
     //typedef fc8_config_struct fc8_config;
     //typedef relu6_config_struct relu6_config;
     typedef output3_config_struct output3_config;
-    typedef selu3_config_struct softmax3_config;
+    //typedef selu3_config_struct softmax3_config;
+    typedef softmax3_config_struct softmax3_config;
 };
 
 #endif

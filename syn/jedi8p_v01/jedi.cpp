@@ -45,16 +45,19 @@ void jedi(
 	    input_t I[N_o][P], // change to number of particles
         result_t result[N_OUTPUT_3]
     ){
-        #pragma HLS DATAFLOW
+        //#pragma HLS DATAFLOW
+        #pragma HLS PIPELINE
         
         #pragma HLS ARRAY_PARTITION variable=I       complete dim=2
         #pragma HLS ARRAY_PARTITION variable=I       complete dim=1
+        #pragma HLS ARRAY_PARTITION variable=result  complete 
+
 
         input_t O[N_o][D_o];
 
         nnet::jedi_pi_2layer<input_t, input_t, jedi_config, dense1_config, dense2_config>(I, O, w1, w2, b1, b2, w4, w5, w6, b4, b5, b6);
         //nnet::jedi_fusion_dnn1_2layer<input_t, input_t, jedi_config, dense1_config, dense2_config>(I, O, w1, w2, b1, b2, w4, w5, w6, b4, b5, b6);
 		
-        nnet::jedi_dnn3_mlst01<input_t, input_t, dense3_config>(O, result, w7, w9, b7, b9);
+        nnet::jedi_dnn3_mlst01<input_t, result_t, dense3_config>(O, result, w7, w9, b7, b9);
         
 }

@@ -54,13 +54,12 @@ typedef ap_fixed<bits_total, bits_integer> model_default_t;
 typedef ap_uint<6> jedi_r_id_t;
 typedef ap_fixed<16,6> jedi_accum_t;
 
-
-typedef model_default_t result_t;
+typedef ap_fixed<16,6,AP_RND,AP_SAT> result_t;
 typedef model_default_t itmdia_t;
 typedef model_default_t input_t; // default <16,6>, changed to <16,10>
 
 typedef ap_fixed<8, 1> model_params_t; 
-
+typedef ap_ufixed<8,0,AP_RND,AP_SAT> model_relu_res_t; 
 
 //typedef ap_fixed<8, 1> weight30_t;
 //typedef ap_fixed<8, 1> bias30_t;
@@ -96,6 +95,12 @@ typedef model_params_t fc7_weight_t;
 typedef model_params_t fc7_bias_t;
 typedef model_params_t fc9_weight_t;
 typedef model_params_t fc9_bias_t;
+
+typedef ap_fixed<18,8> softmax_g2_table_t;
+//typedef ap_fixed<18,8,AP_RND,AP_SAT> softmax_g2_exp_table_t;
+//typedef ap_fixed<18,8,AP_RND,AP_SAT> softmax_g2_inv_table_t;
+
+
 
 
 #endif
